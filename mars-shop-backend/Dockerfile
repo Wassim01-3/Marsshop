@@ -36,6 +36,8 @@ COPY . .
 # Install PHP dependencies
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+RUN mkdir -p /var/www/html/var
+
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/var
 
