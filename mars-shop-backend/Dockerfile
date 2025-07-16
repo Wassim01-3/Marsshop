@@ -20,7 +20,9 @@ RUN wget https://get.symfony.com/cli/installer -O - | bash && \
 
 # Set environment variable to allow Composer plugins as root
 ENV COMPOSER_ALLOW_SUPERUSER=1
-    
+
+ENV APP_ENV=prod
+
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
