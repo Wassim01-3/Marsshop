@@ -1,0 +1,578 @@
+
+
+--- config\bundles.php ---
+<?php
+
+return [
+    Symfony\Bundle\FrameworkBundle\FrameworkBundle::class => ['all' => true],
+    Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
+    Doctrine\Bundle\MigrationsBundle\DoctrineMigrationsBundle::class => ['all' => true],
+    Symfony\Bundle\DebugBundle\DebugBundle::class => ['dev' => true],
+    Symfony\Bundle\TwigBundle\TwigBundle::class => ['all' => true],
+    Symfony\Bundle\WebProfilerBundle\WebProfilerBundle::class => ['dev' => true, 'test' => true],
+    Symfony\UX\StimulusBundle\StimulusBundle::class => ['all' => true],
+    Symfony\UX\Turbo\TurboBundle::class => ['all' => true],
+    Twig\Extra\TwigExtraBundle\TwigExtraBundle::class => ['all' => true],
+    Symfony\Bundle\SecurityBundle\SecurityBundle::class => ['all' => true],
+    Symfony\Bundle\MonologBundle\MonologBundle::class => ['all' => true],
+    Symfony\Bundle\MakerBundle\MakerBundle::class => ['dev' => true],
+    Nelmio\CorsBundle\NelmioCorsBundle::class => ['all' => true],
+    ApiPlatform\Symfony\Bundle\ApiPlatformBundle::class => ['all' => true],
+    SymfonyCasts\Bundle\VerifyEmail\SymfonyCastsVerifyEmailBundle::class => ['all' => true],
+    Jose\Bundle\JoseFramework\JoseFrameworkBundle::class => ['all' => true],
+    Doctrine\Bundle\FixturesBundle\DoctrineFixturesBundle::class => ['dev' => true, 'test' => true],
+    Lexik\Bundle\JWTAuthenticationBundle\LexikJWTAuthenticationBundle::class => ['all' => true],
+];
+
+
+--- config\preload.php ---
+<?php
+
+if (file_exists(dirname(__DIR__).'/var/cache/prod/App_KernelProdContainer.preload.php')) {
+    require dirname(__DIR__).'/var/cache/prod/App_KernelProdContainer.preload.php';
+}
+
+
+--- config\routes.yaml ---
+controllers:
+    resource:
+        path: ../src/Controller/
+        namespace: App\Controller
+    type: attribute
+
+api_login_check:
+    path: /api/login_check
+
+
+--- config\services.yaml ---
+# This file is the entry point to configure your own services.
+# Files in the packages/ subdirectory configure your dependencies.
+
+# Put parameters here that don't need to change on each machine where the app is deployed
+# https://symfony.com/doc/current/best_practices.html#use-parameters-for-application-configuration
+parameters:
+
+services:
+    # default configuration for services in *this* file
+    _defaults:
+        autowire: true      # Automatically injects dependencies in your services.
+        autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
+
+    # makes classes in src/ available to be used as services
+    # this creates a service per class whose id is the fully-qualified class name
+    App\:
+        resource: '../src/'
+
+    # add more service definitions when explicit configuration is needed
+    # please note that last definitions always *replace* previous ones
+
+
+--- config\jwt\private.pem ---
+-----BEGIN PRIVATE KEY-----
+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
+r8C9OlT1OI5JqWuClnmihYm8lwrOgA==
+-----END PRIVATE KEY-----
+
+
+--- config\jwt\public.pem ---
+-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAk8+LDwbOjvMCvoqvKrKz
++ezyYle2LORux1xcd9Lyo+XD4HD6jUIBowQ2RwmvuOHsiQsP7YWthuhVyz4hklM8
+Nezn1du5qlINNZpBXWlRGigF0MCAjYG1W9x5g39gNvfpImzOG6wO7dB7BSKJd2+Q
+KBT3WPQrSxIXVfgmwl3fUd1rl1P1UWDKivM2xF8Vyd5BHdb+YI0ImVl8C1gkQk+G
+8ngreRTOfQgCDL4X704+ts3UGLMu4LGoHZpMk4KoRji/dm3FeVF6S6QLGNzKHZ/O
+8RTuKf8C5c5qr78pgSOWNrJpwrpMv3DcNfOk6icK1xatcVSSb03x6ohEeAPBiDKq
+RCksxVWSKHJYOzYdAk4oWxRUFQdaSrcWaudfdEkXowHYvKea5dcTxipDnLBv79hb
+SbyqPnhvzPpPauW54VRYnC1NjFWYzPsKNoSDo1GUGCWzNSTEIymo/V9gE7Z1ieKP
+nFRhkUBMslGgH1deHgwxzi7Wrm6SAFXyB1PyhUiTtxts1mbEPX23YCMcoTJkqFjc
+9MSuatUCkow7V4ALwPpNpfJyq7/LD1bfzgOknHuyWdh7XJDfj/OBRXmvIFhuPyMI
+IYihSlpa1JUhgoCcznbmHoy3iGvBT1PNtf+0hfxkGpu1tAFf8b67+XHCrNiiQ2km
+Usb6oQx+/1MVxArtNCFtevcCAwEAAQ==
+-----END PUBLIC KEY-----
+
+
+--- config\packages\api_platform.yaml ---
+api_platform:
+    title: Hello API Platform
+    version: 1.0.0
+    defaults:
+        stateless: true
+        cache_headers:
+            vary: ['Content-Type', 'Authorization', 'Origin']
+
+
+--- config\packages\asset_mapper.yaml ---
+framework:
+    asset_mapper:
+        # The paths to make available to the asset mapper.
+        paths:
+            - assets/
+        missing_import_mode: strict
+
+when@prod:
+    framework:
+        asset_mapper:
+            missing_import_mode: warn
+
+
+--- config\packages\cache.yaml ---
+framework:
+    cache:
+        # Unique name of your app: used to compute stable namespaces for cache keys.
+        #prefix_seed: your_vendor_name/app_name
+
+        # The "app" cache stores to the filesystem by default.
+        # The data in this cache should persist between deploys.
+        # Other options include:
+
+        # Redis
+        #app: cache.adapter.redis
+        #default_redis_provider: redis://localhost
+
+        # APCu (not recommended with heavy random-write workloads as memory fragmentation can cause perf issues)
+        #app: cache.adapter.apcu
+
+        # Namespaced pools use the above "app" backend by default
+        #pools:
+            #my.dedicated.cache: null
+
+
+--- config\packages\csrf.yaml ---
+# Enable stateless CSRF protection for forms and logins/logouts
+framework:
+    form:
+        csrf_protection:
+            token_id: submit
+
+    csrf_protection:
+        stateless_token_ids:
+            - submit
+            - authenticate
+            - logout
+
+
+--- config\packages\debug.yaml ---
+when@dev:
+    debug:
+        # Forwards VarDumper Data clones to a centralized server allowing to inspect dumps on CLI or in your browser.
+        # See the "server:dump" command to start a new server.
+        dump_destination: "tcp://%env(VAR_DUMPER_SERVER)%"
+
+
+--- config\packages\doctrine.yaml ---
+doctrine:
+    dbal:
+        url: '%env(resolve:DATABASE_URL)%'
+
+        # IMPORTANT: You MUST configure your server version,
+        # either here or in the DATABASE_URL env var (see .env file)
+        #server_version: '16'
+
+        profiling_collect_backtrace: '%kernel.debug%'
+        use_savepoints: true
+    orm:
+        auto_generate_proxy_classes: true
+        enable_lazy_ghost_objects: true
+        report_fields_where_declared: true
+        validate_xml_mapping: true
+        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+        identity_generation_preferences:
+            Doctrine\DBAL\Platforms\PostgreSQLPlatform: identity
+        auto_mapping: true
+        mappings:
+            App:
+                type: attribute
+                is_bundle: false
+                dir: '%kernel.project_dir%/src/Entity'
+                prefix: 'App\Entity'
+                alias: App
+        controller_resolver:
+            auto_mapping: false
+
+when@test:
+    doctrine:
+        dbal:
+            # "TEST_TOKEN" is typically set by ParaTest
+            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+
+when@prod:
+    doctrine:
+        orm:
+            auto_generate_proxy_classes: false
+            proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+            query_cache_driver:
+                type: pool
+                pool: doctrine.system_cache_pool
+            result_cache_driver:
+                type: pool
+                pool: doctrine.result_cache_pool
+
+    framework:
+        cache:
+            pools:
+                doctrine.result_cache_pool:
+                    adapter: cache.app
+                doctrine.system_cache_pool:
+                    adapter: cache.system
+
+
+--- config\packages\doctrine_migrations.yaml ---
+doctrine_migrations:
+    migrations_paths:
+        # namespace is arbitrary but should be different from App\Migrations
+        # as migrations classes should NOT be autoloaded
+        'DoctrineMigrations': '%kernel.project_dir%/migrations'
+    enable_profiler: false
+
+
+--- config\packages\framework.yaml ---
+# see https://symfony.com/doc/current/reference/configuration/framework.html
+framework:
+    secret: '%env(APP_SECRET)%'
+
+    # Note that the session will be started ONLY if you read or write from it.
+    session: true
+
+    #esi: true
+    #fragments: true
+
+when@test:
+    framework:
+        test: true
+        session:
+            storage_factory_id: session.storage.factory.mock_file
+
+
+--- config\packages\lexik_jwt_authentication.yaml ---
+lexik_jwt_authentication:
+    secret_key: '%kernel.project_dir%/config/jwt/private.pem'
+    public_key: '%kernel.project_dir%/config/jwt/public.pem'
+    token_ttl: 360000
+
+--- config\packages\mailer.yaml ---
+framework:
+    mailer:
+        dsn: '%env(MAILER_DSN)%'
+
+
+--- config\packages\messenger.yaml ---
+framework:
+    messenger:
+        failure_transport: failed
+
+        transports:
+            # https://symfony.com/doc/current/messenger.html#transport-configuration
+            async:
+                dsn: '%env(MESSENGER_TRANSPORT_DSN)%'
+                options:
+                    use_notify: true
+                    check_delayed_interval: 60000
+                retry_strategy:
+                    max_retries: 3
+                    multiplier: 2
+            failed: 'doctrine://default?queue_name=failed'
+            # sync: 'sync://'
+
+        default_bus: messenger.bus.default
+
+        buses:
+            messenger.bus.default: []
+
+        routing:
+            Symfony\Component\Mailer\Messenger\SendEmailMessage: async
+            Symfony\Component\Notifier\Message\ChatMessage: async
+            Symfony\Component\Notifier\Message\SmsMessage: async
+
+            # Route your messages to the transports
+            # 'App\Message\YourMessage': async
+
+
+--- config\packages\monolog.yaml ---
+monolog:
+    channels:
+        - deprecation # Deprecations are logged in the dedicated "deprecation" channel when it exists
+
+when@dev:
+    monolog:
+        handlers:
+            main:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+                channels: ["!event"]
+            # uncomment to get logging in your browser
+            # you may have to allow bigger header sizes in your Web server configuration
+            #firephp:
+            #    type: firephp
+            #    level: info
+            #chromephp:
+            #    type: chromephp
+            #    level: info
+            console:
+                type: console
+                process_psr_3_messages: false
+                channels: ["!event", "!doctrine", "!console"]
+
+when@test:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                channels: ["!event"]
+            nested:
+                type: stream
+                path: "%kernel.logs_dir%/%kernel.environment%.log"
+                level: debug
+
+when@prod:
+    monolog:
+        handlers:
+            main:
+                type: fingers_crossed
+                action_level: error
+                handler: nested
+                excluded_http_codes: [404, 405]
+                buffer_size: 50 # How many messages should be saved? Prevent memory leaks
+            nested:
+                type: stream
+                path: php://stderr
+                level: debug
+                formatter: monolog.formatter.json
+            console:
+                type: console
+                process_psr_3_messages: false
+                channels: ["!event", "!doctrine"]
+            deprecation:
+                type: stream
+                channels: [deprecation]
+                path: php://stderr
+                formatter: monolog.formatter.json
+
+
+--- config\packages\nelmio_cors.yaml ---
+# config/packages/nelmio_cors.yaml
+nelmio_cors:
+  defaults:
+    allow_origin: ['http://localhost:8080']
+    allow_headers: ['Content-Type', 'Authorization']
+    allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+    max_age: 3600
+  paths:
+    '^/api/':
+      allow_origin: ['http://localhost:8080']
+      allow_headers: ['Content-Type', 'Authorization']
+      allow_methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+
+
+--- config\packages\notifier.yaml ---
+framework:
+    notifier:
+        chatter_transports:
+        texter_transports:
+        channel_policy:
+            # use chat/slack, chat/telegram, sms/twilio or sms/nexmo
+            urgent: ['email']
+            high: ['email']
+            medium: ['email']
+            low: ['email']
+        admin_recipients:
+            - { email: admin@example.com }
+
+
+--- config\packages\property_info.yaml ---
+framework:
+    property_info:
+        with_constructor_extractor: true
+
+
+--- config\packages\routing.yaml ---
+framework:
+    router:
+        # Configure how to generate URLs in non-HTTP contexts, such as CLI commands.
+        # See https://symfony.com/doc/current/routing.html#generating-urls-in-commands
+        #default_uri: http://localhost
+
+when@prod:
+    framework:
+        router:
+            strict_requirements: null
+
+
+--- config\packages\security.yaml ---
+security:
+    password_hashers:
+        Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface: 'auto'
+        App\Entity\User:
+            algorithm: auto
+
+    providers:
+        app_user_provider:
+            entity:
+                class: App\Entity\User
+                property: email
+
+    firewalls:
+        dev:
+            pattern: ^/(_(profiler|wdt)|css|images|js)/
+            security: false
+
+        login:
+            pattern: ^/api/login
+            stateless: true
+            json_login:
+                check_path: /api/login_check
+                username_path: email
+                password_path: password
+                success_handler: lexik_jwt_authentication.handler.authentication_success
+                failure_handler: lexik_jwt_authentication.handler.authentication_failure
+
+        api:
+            pattern: ^/api
+            stateless: true
+            provider: app_user_provider
+            jwt: ~  # For Lexik JWT Bundle
+            # Or for web-token/jwt-bundle:
+            # custom_authenticators: 
+            #     - jwt.web_token
+
+    access_control:
+        - { path: ^/api/login, roles: PUBLIC_ACCESS }
+        - { path: ^/api/admin, roles: ROLE_ADMIN }
+        - { path: ^/api/products, roles: PUBLIC_ACCESS }
+        - { path: ^/api/me, roles: IS_AUTHENTICATED_FULLY }
+        - { path: ^/api, roles: IS_AUTHENTICATED_FULLY }
+
+when@test:
+    security:
+        password_hashers:
+            Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface:
+                algorithm: auto
+                cost: 4
+                time_cost: 3
+                memory_cost: 10
+
+--- config\packages\translation.yaml ---
+framework:
+    default_locale: en
+    translator:
+        default_path: '%kernel.project_dir%/translations'
+        providers:
+
+
+--- config\packages\twig.yaml ---
+twig:
+    file_name_pattern: '*.twig'
+
+when@test:
+    twig:
+        strict_variables: true
+
+
+--- config\packages\validator.yaml ---
+framework:
+    validation:
+        # Enables validator auto-mapping support.
+        # For instance, basic validation constraints will be inferred from Doctrine's metadata.
+        #auto_mapping:
+        #    App\Entity\: []
+
+when@test:
+    framework:
+        validation:
+            not_compromised_password: false
+
+
+--- config\packages\web_profiler.yaml ---
+when@dev:
+    web_profiler:
+        toolbar: true
+
+    framework:
+        profiler:
+            collect_serializer_data: true
+
+when@test:
+    framework:
+        profiler: { collect: false }
+
+
+--- config\routes\api_platform.yaml ---
+api_platform:
+    resource: .
+    type: api_platform
+    prefix: /api
+
+
+--- config\routes\framework.yaml ---
+when@dev:
+    _errors:
+        resource: '@FrameworkBundle/Resources/config/routing/errors.php'
+        prefix: /_error
+
+
+--- config\routes\security.yaml ---
+_security_logout:
+    resource: security.route_loader.logout
+    type: service
+
+
+--- config\routes\web_profiler.yaml ---
+when@dev:
+    web_profiler_wdt:
+        resource: '@WebProfilerBundle/Resources/config/routing/wdt.php'
+        prefix: /_wdt
+
+    web_profiler_profiler:
+        resource: '@WebProfilerBundle/Resources/config/routing/profiler.php'
+        prefix: /_profiler

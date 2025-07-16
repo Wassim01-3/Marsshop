@@ -1,0 +1,1496 @@
+
+
+--- src\Kernel.php ---
+<?php
+
+namespace App;
+
+use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
+use Symfony\Component\HttpKernel\Kernel as BaseKernel;
+
+class Kernel extends BaseKernel
+{
+    use MicroKernelTrait;
+}
+
+
+--- src\ApiResource\.gitignore ---
+
+
+--- src\Controller\.gitignore ---
+
+
+--- src\Controller\AdminOrderController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Order;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+final class AdminOrderController extends AbstractController
+{
+    #[Route('/admin/order', name: 'app_admin_order')]
+    public function index(): Response
+    {
+        return $this->render('admin_order/index.html.twig', [
+            'controller_name' => 'AdminOrderController',
+        ]);
+    }
+
+    #[Route('/api/admin/orders', name: 'admin_get_orders', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getAllOrders(EntityManagerInterface $em): JsonResponse
+    {
+        $orders = $em->getRepository(Order::class)->findAll();
+
+        $data = array_map(fn(Order $order) => [
+            'id' => $order->getId(),
+            'items' => $order->getItems(),
+            'total' => $order->getTotal(),
+            'status' => $order->getStatus(),
+            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+
+            'customerName' => $order->getCustomerName(),
+            'customerPhone' => $order->getCustomerPhone(),
+            'customerAddress' => $order->getCustomerAddress(),
+            'notes' => $order->getNotes(),
+
+            'user' => [
+                'id' => $order->getUser()?->getId(),
+                'email' => $order->getUser()?->getEmail(),
+                'name' => $order->getUser()?->getName(),
+                'phone' => $order->getUser()?->getPhoneNumber(),
+                'address' => $order->getUser()?->getAddress(),
+            ]
+        ], $orders);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/admin/orders/{id}/confirm', name: 'admin_confirm_order', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function confirmOrder(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $order = $em->getRepository(Order::class)->find($id);
+
+        if (!$order) {
+            return $this->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $order->setStatus('confirmed');
+        $em->flush();
+
+        return $this->json([
+            'id' => $order->getId(),
+            'status' => $order->getStatus(),
+            'message' => 'Order confirmed successfully',
+        ]);
+    }
+
+    #[Route('/api/admin/orders/{id}/cancel', name: 'admin_cancel_order', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function cancelOrder(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $order = $em->getRepository(Order::class)->find($id);
+
+        if (!$order) {
+            return $this->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $order->setStatus('cancelled');
+        $em->flush();
+
+        return $this->json([
+            'id' => $order->getId(),
+            'status' => $order->getStatus(),
+            'message' => 'Order cancelled successfully',
+        ]);
+    }
+}
+
+
+--- src\Controller\AdminUserController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\User;
+use App\Repository\UserRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class AdminUserController extends AbstractController
+{
+    #[Route('/api/users', name: 'admin_user_list', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function listUsers(UserRepository $userRepo): JsonResponse
+    {
+        $users = $userRepo->findAll();
+
+        $data = array_map(fn(User $user) => [
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+        ], $users);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/users/{id}', name: 'admin_user_detail', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function getUserById(User $user): JsonResponse
+    {
+        return $this->json([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+        ]);
+    }
+
+    #[Route('/api/users/{id}', name: 'admin_user_update', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function updateUser(
+        int $id,
+        Request $request,
+        EntityManagerInterface $em
+    ): JsonResponse {
+        $user = $em->getRepository(User::class)->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['roles']) && is_array($data['roles'])) {
+            $user->setRoles($data['roles']);
+        }
+
+        if (isset($data['name'])) {
+            $user->setName($data['name']);
+        }
+
+        if (isset($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+
+        $em->flush();
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+            'message' => 'User updated successfully'
+        ]);
+    }
+
+    #[Route('/api/users/{id}', name: 'admin_user_delete', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteUser(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $user = $em->getRepository(User::class)->find($id);
+
+        if (!$user) {
+            return new JsonResponse(['error' => 'User not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $em->remove($user);
+        $em->flush();
+
+        return new JsonResponse([
+            'message' => 'User deleted successfully',
+            'id' => $id
+        ]);
+    }
+}
+
+
+--- src\Controller\CategoryController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Category;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class CategoryController extends AbstractController
+{
+    #[Route('/api/categories', name: 'get_categories', methods: ['GET'])]
+    public function getCategories(EntityManagerInterface $em): JsonResponse
+    {
+        $categories = $em->getRepository(Category::class)->findAll();
+
+        $data = array_map(fn(Category $category) => [
+            'id' => $category->getId(),
+            'name' => $category->getName(),
+        ], $categories);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/categories', name: 'create_category', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function createCategory(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['name']) || trim($data['name']) === '') {
+            return $this->json(['error' => 'Category name is required'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $existing = $em->getRepository(Category::class)->findOneBy(['name' => $data['name']]);
+        if ($existing) {
+            return $this->json(['error' => 'Category already exists'], Response::HTTP_CONFLICT);
+        }
+
+        $category = new Category();
+        $category->setName($data['name']);
+
+        $em->persist($category);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Category created successfully',
+            'category' => [
+                'id' => $category->getId(),
+                'name' => $category->getName(),
+            ]
+        ], Response::HTTP_CREATED);
+    }
+}
+
+
+--- src\Controller\DashboardController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Order;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class DashboardController extends AbstractController
+{
+    #[Route('/api/admin/dashboard', name: 'admin_dashboard', methods: ['GET'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function dashboardStats(EntityManagerInterface $em): JsonResponse
+    {
+        $totalOrders = $em->getRepository(Order::class)->count([]);
+        $totalRevenue = $em->createQueryBuilder()
+            ->select('SUM(o.total)')
+            ->from(Order::class, 'o')
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return $this->json([
+            'totalOrders' => $totalOrders,
+            'totalRevenue' => $totalRevenue,
+        ]);
+    }
+}
+
+
+--- src\Controller\FeatureProductController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Product;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class FeatureProductController
+{
+    #[Route('/api/products/{id}/feature', name: 'toggle_feature_product', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function __invoke(int $id, EntityManagerInterface $em, Request $request): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+
+        if (!$product) {
+            throw new NotFoundHttpException("Product not found.");
+        }
+
+        $product->setFeatured(!$product->isFeatured());
+        $em->flush();
+
+        return new JsonResponse([
+            'id' => $product->getId(),
+            'featured' => $product->isFeatured(),
+        ]);
+    }
+}
+
+
+--- src\Controller\MeController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\User;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class MeController extends AbstractController
+{
+    #[Route('/api/me', name: 'api_me', methods: ['GET'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function __invoke(): JsonResponse
+    {
+        /** @var User $user */
+        $user = $this->getUser();
+
+        return $this->json([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+        ]);
+    }
+}
+
+
+--- src\Controller\OrderController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Order;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+class OrderController extends AbstractController
+{
+    #[Route('/api/orders', name: 'get_my_orders', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function listMyOrders(EntityManagerInterface $em): JsonResponse
+    {
+        /** @var UserInterface $user */
+        $user = $this->getUser();
+        $orders = $em->getRepository(Order::class)->findBy(['user' => $user]);
+
+        $data = array_map(fn(Order $order) => [
+            'id' => $order->getId(),
+            'items' => $order->getItems(),
+            'total' => $order->getTotal(),
+            'status' => $order->getStatus(),
+            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+        ], $orders);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/orders/{id}', name: 'get_order_detail', methods: ['GET'])]
+    #[IsGranted('ROLE_USER')]
+    public function getOrderDetail(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var UserInterface $user */
+        $user = $this->getUser();
+        $order = $em->getRepository(Order::class)->find($id);
+
+        if (!$order || $order->getUser()->getId() !== $user->getId()) {
+            return $this->json(['error' => 'Order not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        return $this->json([
+            'id' => $order->getId(),
+            'items' => $order->getItems(),
+            'total' => $order->getTotal(),
+            'status' => $order->getStatus(),
+            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+        ]);
+    }
+
+    #[Route('/api/orders', name: 'create_order', methods: ['POST'])]
+    #[IsGranted('ROLE_USER')]
+    public function createOrder(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        /** @var UserInterface $user */
+        $user = $this->getUser();
+        $data = json_decode($request->getContent(), true);
+
+        if (!isset($data['items']) || !is_array($data['items'])) {
+            return $this->json(['error' => 'Invalid or missing items.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $total = 0.0;
+        foreach ($data['items'] as $item) {
+            if (!isset($item['price'], $item['quantity'])) {
+                return $this->json(['error' => 'Invalid item data.'], Response::HTTP_BAD_REQUEST);
+            }
+            $total += $item['price'] * $item['quantity'];
+        }
+
+        $order = new Order();
+        $order->setUser($user);
+        $order->setItems($data['items']);
+        $order->setTotal($total);
+
+        $em->persist($order);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Order created successfully',
+            'order' => [
+                'id' => $order->getId(),
+                'total' => $order->getTotal(),
+                'status' => $order->getStatus(),
+                'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+            ]
+        ], Response::HTTP_CREATED);
+    }
+}
+
+
+--- src\Controller\ProductController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\Product;
+use App\Entity\Category;
+use App\Entity\ProductVariant;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class ProductController extends AbstractController
+{
+    #[Route('/api/products', name: 'list_products', methods: ['GET'])]
+    public function listProducts(EntityManagerInterface $em): JsonResponse
+    {
+        $products = $em->getRepository(Product::class)->findAll();
+
+        $data = array_map(function (Product $product) {
+            $variants = array_map(function (ProductVariant $variant) {
+                return [
+                    'id' => $variant->getId(),
+                    'color' => $variant->getColor(),
+                    'size' => $variant->getSize(),
+                    'stock' => $variant->getStock(),
+                    'imageUrl' => $variant->getImageUrl(),
+                ];
+            }, $product->getVariants()->toArray());
+
+            return [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'price' => $product->getPrice(),
+                'description' => $product->getDescription(),
+                'image' => $product->getImage(),
+                'category' => $product->getCategory()?->getName(),
+                'featured' => $product->isFeatured(),
+                'variants' => $variants,
+            ];
+        }, $products);
+
+        return $this->json($data);
+    }
+
+    #[Route('/api/products/{id}', name: 'get_product_detail', methods: ['GET'])]
+    public function getProductDetail(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+
+        if (!$product) {
+            return $this->json(['error' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $variants = [];
+        foreach ($product->getVariants() as $variant) {
+            $variants[] = [
+                'id' => $variant->getId(),
+                'color' => $variant->getColor(),
+                'size' => $variant->getSize(),
+                'stock' => $variant->getStock(),
+                'imageUrl' => $variant->getImageUrl(),
+            ];
+        }
+
+        return $this->json([
+            'id' => $product->getId(),
+            'name' => $product->getName(),
+            'price' => $product->getPrice(),
+            'description' => $product->getDescription(),
+            'image' => $product->getImage(),
+            'category' => $product->getCategory()?->getName(),
+            'featured' => $product->isFeatured(),
+            'variants' => $variants
+        ]);
+    }
+
+    #[Route('/api/products', name: 'create_product', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function createProduct(Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+
+        if (
+            !isset($data['name'], $data['price'], $data['description'], $data['image'], $data['category_id'])
+        ) {
+            return $this->json(['error' => 'Missing required product fields'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $category = $em->getRepository(Category::class)->find($data['category_id']);
+        if (!$category) {
+            return $this->json(['error' => 'Invalid category'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $product = new Product();
+        $product->setName($data['name']);
+        $product->setPrice((float) $data['price']);
+        $product->setDescription($data['description']);
+        $product->setImage($data['image']);
+        $product->setCategory($category);
+        $product->setFeatured($data['featured'] ?? false);
+
+        if (!empty($data['variants']) && is_array($data['variants'])) {
+            foreach ($data['variants'] as $variantData) {
+                if (
+                    isset($variantData['color'], $variantData['size'], $variantData['stock'], $variantData['imageUrl'])
+                ) {
+                    $variant = new ProductVariant();
+                    $variant->setColor($variantData['color']);
+                    $variant->setSize($variantData['size']);
+                    $variant->setStock((int)$variantData['stock']);
+                    $variant->setImageUrl($variantData['imageUrl']);
+                    $variant->setProduct($product);
+                    $em->persist($variant);
+                }
+            }
+        }
+
+        $em->persist($product);
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Product created successfully',
+            'product' => [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'price' => $product->getPrice(),
+                'description' => $product->getDescription(),
+                'image' => $product->getImage(),
+                'category' => $category->getName(),
+                'featured' => $product->isFeatured()
+            ]
+        ], Response::HTTP_CREATED);
+    }
+
+    #[Route('/api/products/{id}', name: 'update_product', methods: ['PATCH'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function updateProduct(int $id, Request $request, EntityManagerInterface $em): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+        if (!$product) {
+            return $this->json(['error' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $data = json_decode($request->getContent(), true);
+
+        if (isset($data['name'])) $product->setName($data['name']);
+        if (isset($data['price'])) $product->setPrice((float) $data['price']);
+        if (isset($data['description'])) $product->setDescription($data['description']);
+        if (isset($data['image'])) $product->setImage($data['image']);
+        if (isset($data['featured'])) $product->setFeatured((bool) $data['featured']);
+
+        if (isset($data['category_id'])) {
+            $category = $em->getRepository(Category::class)->find($data['category_id']);
+            if (!$category) {
+                return $this->json(['error' => 'Invalid category'], Response::HTTP_BAD_REQUEST);
+            }
+            $product->setCategory($category);
+        }
+
+        $em->flush();
+
+        return $this->json([
+            'message' => 'Product updated successfully',
+            'product' => [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'price' => $product->getPrice(),
+                'description' => $product->getDescription(),
+                'image' => $product->getImage(),
+                'category' => $product->getCategory()?->getName(),
+                'featured' => $product->isFeatured()
+            ]
+        ]);
+    }
+
+    #[Route('/api/products/{id}', name: 'delete_product', methods: ['DELETE'])]
+    #[IsGranted('ROLE_ADMIN')]
+    public function deleteProduct(int $id, EntityManagerInterface $em): JsonResponse
+    {
+        $product = $em->getRepository(Product::class)->find($id);
+
+        if (!$product) {
+            return $this->json(['error' => 'Product not found'], Response::HTTP_NOT_FOUND);
+        }
+
+        $em->remove($product);
+        $em->flush();
+
+        return $this->json(['message' => 'Product deleted successfully']);
+    }
+}
+
+
+--- src\Controller\RegisterController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Validator\Validator\ValidatorInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class RegisterController
+{
+    #[Route('/api/register', name: 'api_register', methods: ['POST'])]
+    public function __invoke(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $hasher,
+        ValidatorInterface $validator
+    ): JsonResponse {
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data || !isset($data['email'], $data['password'], $data['name'])) {
+            return new JsonResponse(['error' => 'Missing required fields.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        $user = new User();
+        $user->setEmail($data['email']);
+        $user->setName($data['name']);
+        $user->setRoles(['ROLE_USER']);
+
+        $hashedPassword = $hasher->hashPassword($user, $data['password']);
+        $user->setPassword($hashedPassword);
+
+        $errors = $validator->validate($user);
+        if (count($errors) > 0) {
+            return new JsonResponse(['error' => (string) $errors], Response::HTTP_BAD_REQUEST);
+        }
+
+        $em->persist($user);
+        $em->flush();
+
+        return new JsonResponse([
+            'message' => 'User registered successfully',
+            'user' => [
+                'id' => $user->getId(),
+                'email' => $user->getEmail(),
+                'name' => $user->getName(),
+            ]
+        ], Response::HTTP_CREATED);
+    }
+}
+
+
+--- src\Controller\UpdateMeController.php ---
+<?php
+
+namespace App\Controller;
+
+use App\Entity\User;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFoundation\JsonResponse;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+class UpdateMeController
+{
+    #[Route('/api/me', name: 'api_update_me', methods: ['PATCH'])]
+    #[IsGranted('IS_AUTHENTICATED_FULLY')]
+    public function __invoke(
+        Request $request,
+        EntityManagerInterface $em,
+        UserPasswordHasherInterface $hasher
+    ): JsonResponse {
+        /** @var User $user */
+        $user = $request->getUser();
+        $data = json_decode($request->getContent(), true);
+
+        if (!$data) {
+            return new JsonResponse(['error' => 'Invalid JSON.'], Response::HTTP_BAD_REQUEST);
+        }
+
+        if (isset($data['name'])) {
+            $user->setName($data['name']);
+        }
+
+        if (isset($data['email'])) {
+            $user->setEmail($data['email']);
+        }
+
+        if (isset($data['password']) && $data['password']) {
+            $user->setPassword($hasher->hashPassword($user, $data['password']));
+        }
+
+        $em->flush();
+
+        return new JsonResponse([
+            'id' => $user->getId(),
+            'email' => $user->getEmail(),
+            'name' => $user->getName(),
+            'roles' => $user->getRoles(),
+            'message' => 'Profile updated successfully',
+        ]);
+    }
+}
+
+
+--- src\DataFixtures\AppFixtures.php ---
+<?php
+
+namespace App\DataFixtures;
+
+use App\Entity\User;
+use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Persistence\ObjectManager;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
+
+class AppFixtures extends Fixture
+{
+    private UserPasswordHasherInterface $hasher;
+
+    public function __construct(UserPasswordHasherInterface $hasher)
+    {
+        $this->hasher = $hasher;
+    }
+
+    public function load(ObjectManager $manager): void
+    {
+        $admin = new User();
+        $admin->setEmail("admin@marsshop.com");
+        $admin->setName("Admin");
+        $admin->setRoles(['ROLE_ADMIN']);
+
+        $hashedPassword = $this->hasher->hashPassword($admin, "admin");
+        $admin->setPassword($hashedPassword);
+
+        $manager->persist($admin);
+        $manager->flush();
+    }
+}
+
+
+--- src\Entity\.gitignore ---
+
+
+--- src\Entity\Order.php ---
+<?php
+
+namespace App\Entity;
+
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\Post;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Patch;
+use App\Repository\OrderRepository;
+use Doctrine\DBAL\Types\Types;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Security\Core\User\UserInterface;
+use App\Controller\AdminOrderController;
+
+
+
+#[ORM\Entity(repositoryClass: OrderRepository::class)]
+#[ApiResource(
+    operations: [
+        new GetCollection(
+            normalizationContext: ['groups' => ['order:read']],
+            security: "is_granted('ROLE_USER')"
+        ),
+        new Get(
+            normalizationContext: ['groups' => ['order:read']],
+            security: "object.getUser() == user or is_granted('ROLE_ADMIN')"
+        ),
+        new Post(
+            denormalizationContext: ['groups' => ['order:write']],
+            security: "is_granted('ROLE_USER')"
+        ),
+        new Patch(
+            uriTemplate: '/admin/orders/{id}/confirm',
+            controller: AdminOrderController::class,
+            security: "is_granted('ROLE_ADMIN')",
+            read: false,
+            deserialize: false,
+            name: 'admin_confirm_order'
+        )
+    ]
+)]
+#[ORM\Table(name: '`order`')]
+class Order
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['order:read'])]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    #[Groups(['order:read'])]
+    private ?UserInterface $user = null;
+
+    #[ORM\Column(type: Types::JSON)]
+    #[Groups(['order:read', 'order:write'])]
+    private array $items = [];
+
+    #[ORM\Column(type: Types::FLOAT)]
+    #[Groups(['order:read', 'order:write'])]
+    private float $total = 0.0;
+
+    #[ORM\Column(type: Types::STRING)]
+    #[Groups(['order:read'])]
+    private string $status = 'pending';
+
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
+    #[Groups(['order:read'])]
+    private \DateTimeImmutable $createdAt;
+
+    public function __construct()
+    {
+        $this->createdAt = new \DateTimeImmutable();
+    }
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getUser(): ?UserInterface
+    {
+        return $this->user;
+    }
+
+    public function setUser(?UserInterface $user): void
+    {
+        $this->user = $user;
+    }
+
+    public function getItems(): array
+    {
+        return $this->items;
+    }
+
+    public function setItems(array $items): void
+    {
+        $this->items = $items;
+    }
+
+    public function getTotal(): float
+    {
+        return $this->total;
+    }
+
+    public function setTotal(float $total): void
+    {
+        $this->total = $total;
+    }
+
+    public function getStatus(): string
+    {
+        return $this->status;
+    }
+
+    public function setStatus(string $status): void
+    {
+        $this->status = $status;
+    }
+
+    public function getCreatedAt(): \DateTimeImmutable
+    {
+        return $this->createdAt;
+    }
+}
+
+
+--- src\Entity\Product.php ---
+<?php
+
+namespace App\Entity;
+
+use ApiPlatform\Metadata\ApiResource;
+use ApiPlatform\Metadata\Get;
+use ApiPlatform\Metadata\GetCollection;
+use ApiPlatform\Metadata\Post;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
+#[ORM\Entity]
+#[ApiResource(
+    operations: [
+        new Get(normalizationContext: ['groups' => ['product:read']]),
+        new GetCollection(normalizationContext: ['groups' => ['product:read']]),
+        new Post(denormalizationContext: ['groups' => ['product:write']]),
+    ]
+)]
+class Product
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['product:read'])]
+    private ?int $id = null;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['product:read', 'product:write'])]
+    private string $name;
+
+    #[ORM\Column(type: 'text')]
+    #[Groups(['product:read', 'product:write'])]
+    private string $description;
+
+    #[ORM\Column(type: 'string', length: 100)]
+    #[Groups(['product:read', 'product:write'])]
+    private string $category;
+
+    #[ORM\Column(type: 'float')]
+    #[Groups(['product:read', 'product:write'])]
+    private float $price;
+
+    #[ORM\Column(type: 'boolean')]
+    #[Groups(['product:read', 'product:write'])]
+    private bool $featured = false;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['product:read', 'product:write'])]
+    private ?array $images = null;
+
+    #[ORM\Column(type: 'json', nullable: true)]
+    #[Groups(['product:read', 'product:write'])]
+    private ?array $colors = null;
+
+    #[ORM\OneToMany(
+        mappedBy: 'product',
+        targetEntity: ProductVariant::class,
+        cascade: ['persist', 'remove'],
+        orphanRemoval: true
+    )]
+    #[Groups(['product:read'])]
+    private Collection $variants;
+
+    public function __construct()
+    {
+        $this->variants = new ArrayCollection();
+    }
+
+    public function getId(): ?int { return $this->id; }
+
+    public function getName(): string { return $this->name; }
+    public function setName(string $name): self { $this->name = $name; return $this; }
+
+    public function getDescription(): string { return $this->description; }
+    public function setDescription(string $description): self { $this->description = $description; return $this; }
+
+    public function getCategory(): string { return $this->category; }
+    public function setCategory(string $category): self { $this->category = $category; return $this; }
+
+    public function getPrice(): float { return $this->price; }
+    public function setPrice(float $price): self { $this->price = $price; return $this; }
+
+    public function isFeatured(): bool { return $this->featured; }
+    public function setFeatured(bool $featured): self { $this->featured = $featured; return $this; }
+
+    public function getImages(): ?array { return $this->images; }
+    public function setImages(?array $images): self { $this->images = $images; return $this; }
+
+    public function getColors(): ?array { return $this->colors; }
+    public function setColors(?array $colors): self { $this->colors = $colors; return $this; }
+
+    /**
+     * @return Collection<int, ProductVariant>
+     */
+    public function getVariants(): Collection { return $this->variants; }
+
+    public function addVariant(ProductVariant $variant): self {
+        if (!$this->variants->contains($variant)) {
+            $this->variants->add($variant);
+            $variant->setProduct($this);
+        }
+        return $this;
+    }
+
+    public function removeVariant(ProductVariant $variant): self {
+        if ($this->variants->removeElement($variant)) {
+            if ($variant->getProduct() === $this) {
+                $variant->setProduct(null);
+            }
+        }
+        return $this;
+    }
+}
+
+
+--- src\Entity\ProductVariant.php ---
+<?php
+
+namespace App\Entity;
+
+use ApiPlatform\Metadata\ApiResource;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
+
+#[ORM\Entity]
+#[ApiResource(
+    normalizationContext: ['groups' => ['variant:read']],
+    denormalizationContext: ['groups' => ['variant:write']]
+)]
+class ProductVariant
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['variant:read', 'product:read'])]
+    private ?int $id = null;
+
+    #[ORM\ManyToOne(
+        targetEntity: Product::class,
+        inversedBy: 'variants'
+    )]
+    #[ORM\JoinColumn(nullable: false)]
+    #[Groups(['variant:read'])]
+    private Product $product;
+
+    #[ORM\Column(type: 'string', length: 50)]
+    #[Groups(['variant:read', 'variant:write', 'product:read'])]
+    private string $color = 'default';
+
+    #[ORM\Column(type: 'string', length: 20)]
+    #[Groups(['variant:read', 'variant:write', 'product:read'])]
+    private string $size;
+
+    #[ORM\Column(type: 'integer')]
+    #[Groups(['variant:read', 'variant:write', 'product:read'])]
+    private int $stock;
+
+    #[ORM\Column(type: 'string', length: 255)]
+    #[Groups(['variant:read', 'variant:write', 'product:read'])]
+    private string $imageUrl = 'default.png';
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getProduct(): Product
+    {
+        return $this->product;
+    }
+
+    public function setProduct(Product $product): self
+    {
+        $this->product = $product;
+        return $this;
+    }
+
+    public function getColor(): string
+    {
+        return $this->color;
+    }
+
+    public function setColor(string $color): self
+    {
+        $this->color = $color;
+        return $this;
+    }
+
+    public function getSize(): string
+    {
+        return $this->size;
+    }
+
+    public function setSize(string $size): self
+    {
+        $this->size = $size;
+        return $this;
+    }
+
+    public function getStock(): int
+    {
+        return $this->stock;
+    }
+
+    public function setStock(int $stock): self
+    {
+        $this->stock = $stock;
+        return $this;
+    }
+
+    public function getImageUrl(): string
+    {
+        return $this->imageUrl;
+    }
+
+    public function setImageUrl(string $imageUrl): self
+    {
+        $this->imageUrl = $imageUrl;
+        return $this;
+    }
+}
+
+
+--- src\Entity\User.php ---
+<?php
+
+namespace App\Entity;
+
+use App\Repository\UserRepository;
+use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
+
+#[ORM\Entity(repositoryClass: UserRepository::class)]
+#[ORM\UniqueConstraint(name: 'UNIQ_IDENTIFIER_EMAIL', fields: ['email'])]
+class User implements UserInterface, PasswordAuthenticatedUserInterface
+{
+    #[ORM\Id]
+    #[ORM\GeneratedValue]
+    #[ORM\Column]
+    private ?int $id = null;
+
+    #[ORM\Column(length: 180)]
+    private ?string $email = null;
+
+    /**
+     * @var list<string> The user roles
+     */
+    #[ORM\Column]
+    private array $roles = [];
+
+    /**
+     * @var string The hashed password
+     */
+    #[ORM\Column]
+    private ?string $password = null;
+
+    #[ORM\Column(length: 255)]
+    private ?string $name = null;
+
+    public function getId(): ?int
+    {
+        return $this->id;
+    }
+
+    public function getEmail(): ?string
+    {
+        return $this->email;
+    }
+
+    public function setEmail(string $email): static
+    {
+        $this->email = $email;
+
+        return $this;
+    }
+
+    /**
+     * A visual identifier that represents this user.
+     *
+     * @see UserInterface
+     */
+    public function getUserIdentifier(): string
+    {
+        return (string) $this->email;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function getRoles(): array
+    {
+        $roles = $this->roles;
+
+        // Ensure every user has at least ROLE_USER
+        if (!in_array('ROLE_USER', $roles)) {
+            $roles[] = 'ROLE_USER';
+        }
+
+        return array_unique($roles);
+    }
+
+    /**
+     * @param list<string> $roles
+     */
+    public function setRoles(array $roles): static
+    {
+        $this->roles = $roles;
+
+        return $this;
+    }
+
+    /**
+     * @see PasswordAuthenticatedUserInterface
+     */
+    public function getPassword(): ?string
+    {
+        return $this->password;
+    }
+
+    public function setPassword(string $password): static
+    {
+        $this->password = $password;
+
+        return $this;
+    }
+
+    /**
+     * @see UserInterface
+     */
+    public function eraseCredentials(): void
+    {
+        // If you store any temporary, sensitive data on the user, clear it here
+        // $this->plainPassword = null;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+
+    public function setName(string $name): static
+    {
+        $this->name = $name;
+
+        return $this;
+    }
+}
+
+
+--- src\Repository\.gitignore ---
+
+
+--- src\Repository\OrderRepository.php ---
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Order;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Order>
+ *
+ * @method Order|null find($id, $lockMode = null, $lockVersion = null)
+ * @method Order|null findOneBy(array $criteria, array $orderBy = null)
+ * @method Order[]    findAll()
+ * @method Order[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class OrderRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Order::class);
+    }
+}
+
+
+--- src\Repository\ProductRepository.php ---
+<?php
+
+namespace App\Repository;
+
+use App\Entity\Product;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<Product>
+ */
+class ProductRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, Product::class);
+    }
+
+    //    /**
+    //     * @return Product[] Returns an array of Product objects
+    //     */
+    //    public function findByExampleField($value): array
+    //    {
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->orderBy('p.id', 'ASC')
+    //            ->setMaxResults(10)
+    //            ->getQuery()
+    //            ->getResult()
+    //        ;
+    //    }
+
+    //    public function findOneBySomeField($value): ?Product
+    //    {
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->getQuery()
+    //            ->getOneOrNullResult()
+    //        ;
+    //    }
+}
+
+
+--- src\Repository\ProductVariantRepository.php ---
+<?php
+
+namespace App\Repository;
+
+use App\Entity\ProductVariant;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @extends ServiceEntityRepository<ProductVariant>
+ */
+class ProductVariantRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, ProductVariant::class);
+    }
+
+    //    /**
+    //     * @return ProductVariant[] Returns an array of ProductVariant objects
+    //     */
+    //    public function findByExampleField($value): array
+    //    {
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->orderBy('p.id', 'ASC')
+    //            ->setMaxResults(10)
+    //            ->getQuery()
+    //            ->getResult()
+    //        ;
+    //    }
+
+    //    public function findOneBySomeField($value): ?ProductVariant
+    //    {
+    //        return $this->createQueryBuilder('p')
+    //            ->andWhere('p.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->getQuery()
+    //            ->getOneOrNullResult()
+    //        ;
+    //    }
+}
+
+
+--- src\Repository\UserRepository.php ---
+<?php
+
+namespace App\Repository;
+
+use App\Entity\User;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
+use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
+use Symfony\Component\Security\Core\User\PasswordUpgraderInterface;
+
+/**
+ * @extends ServiceEntityRepository<User>
+ */
+class UserRepository extends ServiceEntityRepository implements PasswordUpgraderInterface
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, User::class);
+    }
+
+    /**
+     * Used to upgrade (rehash) the user's password automatically over time.
+     */
+    public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void
+    {
+        if (!$user instanceof User) {
+            throw new UnsupportedUserException(sprintf('Instances of "%s" are not supported.', $user::class));
+        }
+
+        $user->setPassword($newHashedPassword);
+        $this->getEntityManager()->persist($user);
+        $this->getEntityManager()->flush();
+    }
+
+    //    /**
+    //     * @return User[] Returns an array of User objects
+    //     */
+    //    public function findByExampleField($value): array
+    //    {
+    //        return $this->createQueryBuilder('u')
+    //            ->andWhere('u.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->orderBy('u.id', 'ASC')
+    //            ->setMaxResults(10)
+    //            ->getQuery()
+    //            ->getResult()
+    //        ;
+    //    }
+
+    //    public function findOneBySomeField($value): ?User
+    //    {
+    //        return $this->createQueryBuilder('u')
+    //            ->andWhere('u.exampleField = :val')
+    //            ->setParameter('val', $value)
+    //            ->getQuery()
+    //            ->getOneOrNullResult()
+    //        ;
+    //    }
+}
