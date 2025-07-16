@@ -1,6 +1,8 @@
 # Use the official PHP image with Apache
 FROM php:8.2-apache
 
+RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/apache2.conf /etc/apache2/sites-available/000-default.conf
+
 RUN apt-get update && apt-get install -y wget
 
 # Install system dependencies and PHP extensions
