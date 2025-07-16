@@ -50,4 +50,4 @@ RUN chown -R www-data:www-data /var/www/html/var
 EXPOSE 80
 
 # Start Apache
-CMD ["php", "bin/console", "doctrine:migrations:migrate", "--no-interaction"]
+CMD ["apache2-foreground"]
