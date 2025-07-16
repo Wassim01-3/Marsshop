@@ -82,7 +82,7 @@
         "symfony/polyfill-php81": "*",
         "symfony/polyfill-php82": "*"
     },
-    "scripts": {
+    /*"scripts": {
         "auto-scripts": {
             "cache:clear": "symfony-cmd",
             "assets:install %PUBLIC_DIR%": "symfony-cmd",
@@ -94,7 +94,7 @@
         "post-update-cmd": [
             "@auto-scripts"
         ]
-    },
+    },*/
     "conflict": {
         "symfony/symfony": "*"
     },
