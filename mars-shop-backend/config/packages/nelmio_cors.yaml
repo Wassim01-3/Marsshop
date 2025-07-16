@@ -1,14 +1,14 @@
 # config/packages/nelmio_cors.yaml
 nelmio_cors:
   defaults:
-    allow_credentials: false
+    allow_credentials: true
     allow_origin: ['http://localhost:8080', 'https://marsshop-ldax.onrender.com', 'https://marsshop.up.railway.app']
     allow_headers: ['Content-Type', 'Authorization']
     allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
-    expose_headers: []
+    expose_headers: ['Link']
     max_age: 3600
   paths:
-    '^/':
+    '^/api/':
       allow_origin: ['http://localhost:8080', 'https://marsshop-ldax.onrender.com', 'https://marsshop.up.railway.app']
       allow_headers: ['Content-Type', 'Authorization']
       allow_methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'PATCH', 'DELETE']
