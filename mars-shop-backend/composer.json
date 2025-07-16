@@ -89,11 +89,11 @@
             "importmap:install": "symfony-cmd"
         },
         "post-install-cmd": [
-            "@auto-scripts"
-        ],
-        "post-update-cmd": [
-            "@auto-scripts"
-        ]
+           "php bin/console cache:clear"
+            ],
+         "post-update-cmd": [
+           "php bin/console cache:clear"
+         ]
     },
     "conflict": {
         "symfony/symfony": "*"
