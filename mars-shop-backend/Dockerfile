@@ -1,17 +1,18 @@
 # Use the official PHP image with Apache
 FROM php:8.2-apache
 
+# Set Apache DocumentRoot to /var/www/html/public
 RUN sed -i 's!/var/www/html!/var/www/html/public!g' /etc/apache2/apache2.conf /etc/apache2/sites-available/000-default.conf
 
 RUN apt-get update && apt-get install -y wget
 
-# Install system dependencies and PHP extensions
+# Install system dependencies and PHP extensions (including PostgreSQL)
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libpq-dev \
     git \
     unzip \
-    && docker-php-ext-install intl pdo pdo_mysql
+    && docker-php-ext-install intl pdo pdo_pgsql
 
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
@@ -23,8 +24,9 @@ RUN wget https://get.symfony.com/cli/installer -O - | bash && \
 # Set environment variable to allow Composer plugins as root
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
+# Set default envs (will be overridden by Render at runtime)
 ENV APP_ENV=prod
-ENV DATABASE_URL="mysql://fake:fake@127.0.0.1:3306/fake"
+ENV DATABASE_URL="postgres://fake:fake@127.0.0.1:5432/fake"
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
@@ -35,9 +37,10 @@ WORKDIR /var/www/html
 # Copy app files
 COPY . .
 
-# Install PHP dependencies
+# Install PHP dependencies (skip scripts to avoid DB errors at build)
 RUN composer install --no-dev --optimize-autoloader --no-scripts
 
+# Ensure var directory exists
 RUN mkdir -p /var/www/html/var
 
 # Set permissions
