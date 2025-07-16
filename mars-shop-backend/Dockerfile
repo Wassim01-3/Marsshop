@@ -17,6 +17,9 @@ RUN a2enmod rewrite
 # Install Symfony CLI
 RUN wget https://get.symfony.com/cli/installer -O - | bash && \
     mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+
+# Set environment variable to allow Composer plugins as root
+ENV COMPOSER_ALLOW_SUPERUSER=1
     
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
