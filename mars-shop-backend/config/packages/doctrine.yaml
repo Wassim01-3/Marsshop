@@ -1,7 +1,7 @@
 doctrine:
     dbal:
         url: '%env(resolve:DATABASE_URL)%'
-        driver: 'pdo_pgsql'
+        driver: 'pdo_mysql'
         # Uncomment and set your PostgreSQL version if needed:
         # server_version: '16'
         profiling_collect_backtrace: '%kernel.debug%'
