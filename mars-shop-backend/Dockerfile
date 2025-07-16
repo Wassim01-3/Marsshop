@@ -22,6 +22,7 @@ RUN wget https://get.symfony.com/cli/installer -O - | bash && \
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
 ENV APP_ENV=prod
+ENV DATABASE_URL="mysql://fake:fake@127.0.0.1:3306/fake"
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
