@@ -1,6 +1,8 @@
 # Use the official PHP image with Apache
 FROM php:8.2-apache
 
+RUN apt-get update && apt-get install -y wget
+
 # Install system dependencies and PHP extensions
 RUN apt-get update && apt-get install -y \
     libicu-dev \
