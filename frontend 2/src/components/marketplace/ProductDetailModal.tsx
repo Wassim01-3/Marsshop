@@ -215,6 +215,13 @@ export const ProductDetailModal = ({
   const translatedProduct = autoTranslateProduct(product);
 
   if (showOrderForm) {
+    // Map selectedColors (names) to color values for swatch
+    const selectedColorValues = selectedColors.length > 1
+      ? selectedColors.map(name => {
+          const colorObj = colorOptions.find(c => c.name === name);
+          return colorObj ? colorObj.value : name;
+        })
+      : lastSelectedColor && colorOptions.find(c => c.name === lastSelectedColor)?.value;
     return (
       <OrderForm
         product={translatedProduct}
@@ -222,7 +229,7 @@ export const ProductDetailModal = ({
         open={open}
         onOpenChange={onOpenChange}
         onBack={() => setShowOrderForm(false)}
-        color={selectedColors.length > 1 ? selectedColors : lastSelectedColor}
+        color={selectedColors.length > 1 ? selectedColorValues : selectedColorValues || lastSelectedColor}
         size={selectedSize}
       />
     );
