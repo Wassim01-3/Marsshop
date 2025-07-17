@@ -28,7 +28,7 @@ class OrderController extends AbstractController
             'items' => $order->getItems(),
             'total' => $order->getTotal(),
             'status' => $order->getStatus(),
-            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+            'createdAt' => $order->getCreatedAt()->format(DATE_ATOM),
         ], $orders);
 
         return $this->json($data);
@@ -51,7 +51,7 @@ class OrderController extends AbstractController
             'items' => $order->getItems(),
             'total' => $order->getTotal(),
             'status' => $order->getStatus(),
-            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+            'createdAt' => $order->getCreatedAt()->format(DATE_ATOM),
         ]);
     }
 
@@ -68,7 +68,7 @@ class OrderController extends AbstractController
             'items' => $order->getItems(),
             'total' => $order->getTotal(),
             'status' => $order->getStatus(),
-            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+            'createdAt' => $order->getCreatedAt()->format(DATE_ATOM),
         ], $orders);
 
         return $this->json($data);
@@ -147,7 +147,7 @@ class OrderController extends AbstractController
                 'id' => $order->getId(),
                 'total' => $order->getTotal(),
                 'status' => $order->getStatus(),
-                'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+                'createdAt' => $order->getCreatedAt()->format(DATE_ATOM),
                     'customerName' => $order->getCustomerName(),
                     'customerPhone' => $order->getCustomerPhone(),
                     'customerAddress' => $order->getCustomerAddress(),
