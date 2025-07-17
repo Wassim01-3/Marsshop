@@ -64,11 +64,6 @@ const Login = () => {
     }
   };
 
-  const demoCredentials = [
-    { email: "admin@marsshop.com", password: "admin", role: "Admin" },
-    { email: "john@example.com", password: "password", role: "Customer" },
-  ];
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-amber-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-6">
@@ -159,31 +154,6 @@ const Login = () => {
                   {t("account.register")}
                 </Link>
               </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Demo Credentials */}
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <h3 className="font-medium text-blue-900 mb-3">Demo Credentials</h3>
-            <div className="space-y-2 text-sm">
-              {demoCredentials.map((cred, index) => (
-                <div key={index} className="flex justify-between items-center">
-                  <span className="text-blue-700">{cred.role}:</span>
-                  <button
-                    onClick={() =>
-                      setFormData({
-                        email: cred.email,
-                        password: cred.password,
-                      })
-                    }
-                    className="text-blue-600 hover:text-blue-800 underline"
-                  >
-                    {cred.email} / {cred.password}
-                  </button>
-                </div>
-              ))}
             </div>
           </CardContent>
         </Card>
