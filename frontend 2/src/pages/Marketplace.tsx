@@ -25,6 +25,7 @@ import ShopContactDetails from "@/components/ShopContactDetails";
 import SEO from "@/components/SEO";
 import Fuse from "fuse.js";
 import { Slider } from "@/components/ui/slider";
+import { normalizeDateString } from "@/lib/utils";
 
 const Marketplace = () => {
   const { t, language } = useLanguage();
@@ -91,7 +92,7 @@ const Marketplace = () => {
           return a.name.localeCompare(b.name);
         case "newest":
           return (
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            new Date(normalizeDateString(b.createdAt)).getTime() - new Date(normalizeDateString(a.createdAt)).getTime()
           );
         case "featured":
         default:
