@@ -14,10 +14,11 @@ export function TelegramNotificationManager({ className }: TelegramNotificationM
   const [isLoading, setIsLoading] = useState(false);
   const [isTestLoading, setIsTestLoading] = useState(false);
   const { toast } = useToast();
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   const fetchChatIds = async () => {
     try {
-      const response = await fetch('/api/admin/telegram/chat-ids', {
+      const response = await fetch(`${API_URL}/api/admin/telegram/chat-ids`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -35,7 +36,7 @@ export function TelegramNotificationManager({ className }: TelegramNotificationM
   const testNotification = async () => {
     setIsTestLoading(true);
     try {
-      const response = await fetch('/api/admin/telegram/test', {
+      const response = await fetch(`${API_URL}/api/admin/telegram/test`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
