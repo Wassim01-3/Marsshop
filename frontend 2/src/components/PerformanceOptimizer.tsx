@@ -14,7 +14,7 @@ const PerformanceOptimizer: React.FC<PerformanceOptimizerProps> = ({ children })
       const logoLink = document.createElement('link');
       logoLink.rel = 'preload';
       logoLink.as = 'image';
-      logoLink.href = '/mars_shop logo.png';
+      logoLink.href = '/logo-ms.svg';
       document.head.appendChild(logoLink);
 
       // Preload critical fonts
