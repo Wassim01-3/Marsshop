@@ -116,7 +116,11 @@ class TelegramNotificationService
                 $message .= "   Quantité: <b>{$item['quantity']}</b> × {$itemPrice} = {$itemTotal}\n";
                 
                 if (isset($item['color']) && $item['color']) {
-                    $message .= "   Couleur: <b>{$item['color']}</b>\n";
+                    $color = $item['color'];
+                    if (is_array($color)) {
+                        $color = implode(', ', $color);
+                    }
+                    $message .= "   Couleur: <b>{$color}</b>\n";
                 }
                 if (isset($item['size']) && $item['size']) {
                     $message .= "   Taille: <b>{$item['size']}</b>\n";
