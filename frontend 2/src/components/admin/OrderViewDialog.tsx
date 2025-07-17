@@ -27,6 +27,7 @@ import {
   XCircle,
   Trash2,
 } from "lucide-react";
+import { normalizeDateString } from "@/lib/utils";
 
 interface OrderViewDialogProps {
   order: Order | null;
@@ -161,7 +162,7 @@ const OrderViewDialog = ({
               </div>
               <div className="text-center">
                 <div className="text-lg font-semibold text-blue-600">
-                  {new Date(order.createdAt).toLocaleDateString()}
+                  {new Date(normalizeDateString(order.createdAt)).toLocaleDateString()}
                 </div>
                 <div className="text-sm text-gray-600">Order Date</div>
               </div>
@@ -373,7 +374,7 @@ const OrderViewDialog = ({
                   <div>
                     <p className="font-medium">Order Created</p>
                     <p className="text-sm text-gray-600">
-                      {new Date(order.createdAt).toLocaleString()}
+                      {new Date(normalizeDateString(order.createdAt)).toLocaleString()}
                     </p>
                   </div>
                 </div>
