@@ -79,7 +79,7 @@ const Login = () => {
             className="inline-flex items-center space-x-3 mb-6"
           >
             <img
-              src="/mars_shop logo.png"
+              src="/logo-ms.svg"
               alt="Mars Shop Logo"
               className="w-12 h-12 drop-shadow-lg"
             />
