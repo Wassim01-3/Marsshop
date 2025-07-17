@@ -184,7 +184,14 @@ export const OrderForm = ({
                   {/* Color swatch and name */}
                   <span className="text-sm text-gray-500">Color:</span>
                   {color ? (
-                    <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc' }} title={color}></span>
+                    Array.isArray(color) ? (
+                      <>
+                        <span className="text-sm text-gray-700">{color.join(', ')}</span>
+                        <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc', marginLeft: 4 }} title={color.join(', ')}></span>
+                      </>
+                    ) : (
+                      <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc' }} title={color}></span>
+                    )
                   ) : (
                     <span className="text-sm text-gray-400">-</span>
                   )}
