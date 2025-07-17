@@ -30,12 +30,13 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const [guestMessage, setGuestMessage] = useState<string | null>(null);
   const [cartLoaded, setCartLoaded] = useState(false);
   const isFirstSync = useRef(true);
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
   // Fetch cart on mount
   useEffect(() => {
     if (isAuthenticated) {
       const token = localStorage.getItem("token");
-      fetch("http://localhost:8000/api/cart", {
+      fetch(`${API_URL}/api/cart`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => res.json())
@@ -100,7 +101,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
     if (deepEqual(items, loadedItems)) return; // Only sync if items changed
     if (isAuthenticated) {
       const token = localStorage.getItem("token");
-      fetch("http://localhost:8000/api/cart", {
+      fetch(`${API_URL}/api/cart`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -160,7 +161,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({
   const clearCart = () => {
     if (isAuthenticated) {
       const token = localStorage.getItem("token");
-      fetch("http://localhost:8000/api/cart", {
+      fetch(`${API_URL}/api/cart`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
