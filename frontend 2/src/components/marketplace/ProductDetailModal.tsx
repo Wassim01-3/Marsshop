@@ -222,7 +222,7 @@ export const ProductDetailModal = ({
         open={open}
         onOpenChange={onOpenChange}
         onBack={() => setShowOrderForm(false)}
-        color={lastSelectedColor}
+        color={selectedColors.length > 1 ? selectedColors : lastSelectedColor}
         size={selectedSize}
       />
     );
