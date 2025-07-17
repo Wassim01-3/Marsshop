@@ -186,11 +186,26 @@ export const OrderForm = ({
                   {color ? (
                     Array.isArray(color) ? (
                       <>
-                        <span className="text-sm text-gray-700">{color.join(', ')}</span>
-                        <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc', marginLeft: 4 }} title={color.join(', ')}></span>
+                        <span className="text-sm text-gray-700">{(Array.isArray(color) ? color.map(val => {
+                          const colorObj = product.colors?.find(c => c.value === val || c.name === val);
+                          return colorObj ? colorObj.name : val;
+                        }).join(", ") : "")}</span>
+                        <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc', marginLeft: 4 }} title={Array.isArray(color) ? color.map(val => {
+                          const colorObj = product.colors?.find(c => c.value === val || c.name === val);
+                          return colorObj ? colorObj.name : val;
+                        }).join(", ") : ""}></span>
                       </>
                     ) : (
-                      <span style={{ ...getColorCircleStyle(color), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc' }} title={color}></span>
+                      <>
+                        <span className="text-sm text-gray-700">{(() => {
+                          const colorObj = product.colors?.find(c => c.value === color || c.name === color);
+                          return colorObj ? colorObj.name : color;
+                        })()}</span>
+                        <span style={{ ...getColorCircleStyle(typeof color === 'string' ? color : ''), borderRadius: '50%', display: 'inline-block', width: 20, height: 20, border: '1px solid #ccc', marginLeft: 4 }} title={(() => {
+                          const colorObj = product.colors?.find(c => c.value === color || c.name === color);
+                          return colorObj ? colorObj.name : (typeof color === 'string' ? color : '');
+                        })() || ""}></span>
+                      </>
                     )
                   ) : (
                     <span className="text-sm text-gray-400">-</span>
