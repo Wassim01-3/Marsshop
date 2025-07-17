@@ -26,7 +26,7 @@ interface OrderFormProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBack: () => void;
-  color?: string;
+  color?: string | string[];
   size?: string;
 }
 
