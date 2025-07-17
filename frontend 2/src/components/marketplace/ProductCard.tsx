@@ -177,6 +177,7 @@ export const ProductCard = ({ product, categories }: ProductCardProps) => {
                   title={color.name}
                 />
               ))}
+              <span className="ml-2 text-xs text-gray-700">{translatedProduct.colors.map(c => c.name).join(", ")}</span>
             </div>
           )}
           {/* Size badges */}
