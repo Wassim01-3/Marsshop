@@ -1,9 +1,9 @@
 import axios from 'axios';
 
-const apiUrl = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : "http://localhost:8000/api";
 
 export const getProducts = async () => {
-  const response = await fetch(`${apiUrl}/api/products`);
+  const response = await fetch(`${API_BASE}/products`);
   if (!response.ok) {
     throw new Error("Failed to fetch products");
   }
@@ -13,7 +13,7 @@ export const getProducts = async () => {
 };
 
 export const getProduct = async (id: string) => {
-  const response = await axios.get(`${apiUrl}/api/products/${id}`);
+  const response = await axios.get(`${API_BASE}/products/${id}`);
   return response.data;
 };
 
@@ -25,7 +25,7 @@ export const createProduct = async (productData: any) => {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  const response = await fetch(`${apiUrl}/api/products`, {
+  const response = await fetch(`${API_BASE}/products`, {
     method: "POST",
     headers,
     body: JSON.stringify(productData),
@@ -45,7 +45,7 @@ export const updateProduct = async (productId: string, productData: any) => {
     headers["Authorization"] = `Bearer ${token}`;
   }
   try {
-    const response = await fetch(`${apiUrl}/api/products/${productId}`, {
+    const response = await fetch(`${API_BASE}/products/${productId}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify(productData),
@@ -67,7 +67,7 @@ export const deleteProduct = async (productId: string) => {
   if (token) {
     headers["Authorization"] = `Bearer ${token}`;
   }
-  const response = await fetch(`${apiUrl}/api/products/${productId}`, {
+  const response = await fetch(`${API_BASE}/products/${productId}`, {
     method: "DELETE",
     headers,
   });
@@ -78,7 +78,7 @@ export const deleteProduct = async (productId: string) => {
 };
 
 export const incrementProductViews = async (id: string) => {
-  const response = await fetch(`${apiUrl}/api/products/${id}/view`, { method: 'POST' });
+  const response = await fetch(`${API_BASE}/products/${id}/view`, { method: 'POST' });
   if (!response.ok) {
     throw new Error('Failed to increment product views');
   }
