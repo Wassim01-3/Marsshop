@@ -61,6 +61,7 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import EditProductDialog from "@/components/admin/EditProductDialog";
 import MarsSpinner from "@/components/admin/MarsSpinner";
+import { normalizeDateString } from "@/lib/utils";
 
 // Add user type
 interface AdminUser {
@@ -935,7 +936,7 @@ const Admin = () => {
                             <div className="flex flex-col">
                               <span className="font-semibold text-mars-700">Order #{order.id}</span>
                               <span className="text-gray-600 text-sm">{order.customerName || 'No name'}</span>
-                              <span className="text-xs text-gray-400">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</span>
+                              <span className="text-xs text-gray-400">{order.createdAt ? new Date(normalizeDateString(order.createdAt)).toLocaleDateString() : '-'}</span>
                             </div>
                             <Button
                               variant="outline"
@@ -1004,7 +1005,7 @@ const Admin = () => {
                       });
                       const ordersPerDay = days.map(day =>
                         adminOrders.filter(o => {
-                          const d = new Date(o.createdAt);
+                          const d = new Date(normalizeDateString(o.createdAt));
                           return d.toDateString() === day.toDateString();
                         }).length
                       );
@@ -1443,7 +1444,7 @@ const Admin = () => {
                         if (a.status !== 'pending' && b.status === 'pending') return 1;
                         if (a.status === 'pending' && b.status === 'pending') {
                           // Oldest first
-                          return new Date(a.createdAt) - new Date(b.createdAt);
+                          return new Date(normalizeDateString(a.createdAt)) - new Date(normalizeDateString(b.createdAt));
                         }
                         // 2. Confirmed next
                         if (a.status === 'confirmed' && b.status !== 'confirmed') return -1;
@@ -1527,7 +1528,7 @@ const Admin = () => {
                                 </TableCell>
                               )}
                               {isFirst && (
-                                <TableCell rowSpan={order.items.length} className="align-middle">{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+                                <TableCell rowSpan={order.items.length} className="align-middle">{new Date(normalizeDateString(order.createdAt)).toLocaleDateString()}</TableCell>
                               )}
                               {isFirst && (
                                 <TableCell rowSpan={order.items.length} className="align-middle">
@@ -1677,7 +1678,7 @@ const Admin = () => {
                     <div><b>Phone:</b> {selectedUser.phone || '-'}</div>
                     <div><b>Address:</b> {selectedUser.address || '-'}</div>
                     <div><b>Roles:</b> {selectedUser.roles ? selectedUser.roles.join(", ") : '-'}</div>
-                    <div><b>Created At:</b> {selectedUser.createdAt ? new Date(selectedUser.createdAt).toLocaleString() : '-'}</div>
+                    <div><b>Created At:</b> {selectedUser.createdAt ? new Date(normalizeDateString(selectedUser.createdAt)).toLocaleString() : '-'}</div>
                     <div><b>Pending Orders:</b> {selectedUser.pendingOrders}</div>
                     <div><b>Note:</b> {selectedUser.note || '-'}</div>
                   </div>
@@ -1823,7 +1824,7 @@ const Admin = () => {
                             </TableCell>
                           )}
                           {isFirst && (
-                            <TableCell rowSpan={order.items.length} className="align-middle">{order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '-'}</TableCell>
+                            <TableCell rowSpan={order.items.length} className="align-middle">{order.createdAt ? new Date(normalizeDateString(order.createdAt)).toLocaleDateString() : '-'}</TableCell>
                           )}
                           {isFirst && (
                             <TableCell rowSpan={order.items.length} className="align-middle">
