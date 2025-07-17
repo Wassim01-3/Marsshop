@@ -89,10 +89,10 @@
             "importmap:install": "symfony-cmd"
         },
         "post-install-cmd": [
-           "php bin/console cache:clear"
+           "php bin/console cache:clear --env=prod"
             ],
          "post-update-cmd": [
-           "php bin/console cache:clear"
+           "php bin/console cache:clear --env=prod"
          ]
     },
     "conflict": {
