@@ -149,7 +149,7 @@ const Navbar = () => {
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-3">
             <img
-              src="/mars_shop logo.png"
+              src="/logo-ms.svg"
               alt="Mars Shop Logo"
               className="w-10 h-10 drop-shadow-md"
             />
@@ -174,7 +174,7 @@ const Navbar = () => {
                 <div className="space-y-6 py-6">
                   <div className="flex items-center space-x-3">
                     <img
-                      src="/mars_shop logo.png"
+                      src="/logo-ms.svg"
                       alt="Mars Shop Logo"
                       className="w-10 h-10 drop-shadow-md"
                     />
