@@ -50,7 +50,7 @@ final class AdminOrderController extends AbstractController
                 'items' => $itemsWithProductInfo,
             'total' => $order->getTotal(),
             'status' => $order->getStatus(),
-            'createdAt' => $order->getCreatedAt()->format('Y-m-d H:i:s'),
+            'createdAt' => $order->getCreatedAt()->format(DATE_ATOM),
             'customerName' => $order->getCustomerName(),
             'customerPhone' => $order->getCustomerPhone(),
             'customerAddress' => $order->getCustomerAddress(),
