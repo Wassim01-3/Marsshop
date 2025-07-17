@@ -116,6 +116,8 @@ const Admin = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [showPendingDropdown, setShowPendingDropdown] = useState(false);
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
   const fetchData = async () => {
     setLoading(true);
     try {
@@ -162,7 +164,7 @@ const Admin = () => {
   useEffect(() => {
     if (!isAdmin) return;
     setLoadingUsers(true);
-    fetch("http://localhost:8000/api/users", {
+    fetch(`${API_URL}/api/users`, {
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
       .then(res => res.json())
@@ -549,7 +551,7 @@ const Admin = () => {
   // Delete user
   const handleDeleteUser = async (userId: number) => {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
-    await fetch(`http://localhost:8000/api/users/${userId}`, {
+    await fetch(`${API_URL}/api/users/${userId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     });
@@ -558,7 +560,7 @@ const Admin = () => {
 
   // Update note
   const handleUpdateNote = async (userId: number, note: string) => {
-    await fetch(`http://localhost:8000/api/users/${userId}`, {
+    await fetch(`${API_URL}/api/users/${userId}`, {
       method: "PATCH",
       headers: {
         "Content-Type": "application/json",
