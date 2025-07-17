@@ -14,6 +14,7 @@ import { Navigate } from "react-router-dom";
 import { getMyOrders } from '@/services/orderService';
 import { Table, TableHeader, TableBody, TableCell, TableRow, TableHead } from "@/components/ui/table";
 import MarsSpinner from "@/components/admin/MarsSpinner";
+import { normalizeDateString } from "@/lib/utils";
 
 function getColorCircleStyle(val: string | string[]) {
   if (Array.isArray(val)) {
@@ -313,7 +314,7 @@ const Account = () => {
                           </TableCell>
                               )}
                               {isFirst && (
-                                <TableCell rowSpan={order.items.length} className="align-middle">{new Date(order.createdAt).toLocaleString()}</TableCell>
+                                <TableCell rowSpan={order.items.length} className="align-middle">{new Date(normalizeDateString(order.createdAt)).toLocaleString()}</TableCell>
                               )}
                         </TableRow>
                           );
@@ -340,7 +341,7 @@ const Account = () => {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Member since:</span>
                       <span>
-                        {new Date(user?.createdAt || "").toLocaleDateString()}
+                        {new Date(normalizeDateString(user?.createdAt || "")).toLocaleDateString()}
                       </span>
                     </div>
                     <div className="flex justify-between">
