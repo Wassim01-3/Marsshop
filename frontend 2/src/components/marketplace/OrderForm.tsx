@@ -19,6 +19,7 @@ import { ArrowLeft, ShoppingCart } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { createOrder } from '@/services/orderService';
 import { autoTranslateProduct } from "@/services/translationService";
+import { normalizeDateString } from "@/lib/utils";
 
 interface OrderFormProps {
   product: Product;
@@ -105,13 +106,13 @@ export const OrderForm = ({
           category: product.category,
           stock: product.stock,
           featured: product.featured,
-          createdAt: product.createdAt,
+          createdAt: normalizeDateString(product.createdAt),
           // Only include first image URL, not base64 data
           images: product.images.length > 0 ? [product.images[0]] : [],
           colors: product.colors || [],
           sizes: product.sizes || []
         },
-        color: color,
+        color: Array.isArray(color) ? color[0] : color,
         size: size,
       };
 
