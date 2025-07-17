@@ -22,12 +22,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [user, setUser] = useState<User | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
 
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
   // On mount, fetch user profile if token exists
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       setAuthLoading(true);
-      fetch("http://localhost:8000/api/me", {
+      fetch(`${API_URL}/api/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => {
@@ -53,7 +55,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await fetch("http://localhost:8000/api/login_check", {
+      const res = await fetch(`${API_URL}/api/login_check`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -64,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!token) return false;
       localStorage.setItem("token", token);
       // Fetch user profile
-      const meRes = await fetch("http://localhost:8000/api/me", {
+      const meRes = await fetch(`${API_URL}/api/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!meRes.ok) return false;
@@ -83,7 +85,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     userData: Omit<User, "id" | "createdAt" | "isAdmin"> & { password: string }
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      const res = await fetch("http://localhost:8000/api/register", {
+      const res = await fetch(`${API_URL}/api/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(userData),
@@ -109,7 +111,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!user) return { success: false, error: 'Not authenticated.' };
     const token = localStorage.getItem('token');
     try {
-      const res = await fetch('http://localhost:8000/api/me', {
+      const res = await fetch(`${API_URL}/api/me`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
