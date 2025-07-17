@@ -179,7 +179,7 @@ const About = () => {
           <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
             {t("about.contactUs")}
           </h2>
-          <ShopContactDetails variant="page" />
+          <ShopContactDetails variant="homepage" />
         </div>
       </div>
     </div>
