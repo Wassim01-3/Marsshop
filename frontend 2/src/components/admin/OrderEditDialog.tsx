@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Order } from "@/types";
 import { Save, X, Package, User, Phone, MapPin, Calendar } from "lucide-react";
+import { normalizeDateString } from "@/lib/utils";
 
 interface OrderEditDialogProps {
   order: Order | null;
@@ -201,7 +202,7 @@ const OrderEditDialog = ({
                 <div className="space-y-2">
                   <Label>Order Date</Label>
                   <Input
-                    value={new Date(editedOrder.createdAt).toLocaleDateString()}
+                    value={new Date(normalizeDateString(editedOrder.createdAt)).toLocaleDateString()}
                     disabled
                     className="bg-gray-50"
                   />
