@@ -21,7 +21,7 @@ const NotFound = () => {
         {/* Logo */}
         <div className="flex items-center justify-center space-x-3">
           <img
-            src="/mars_shop logo.png"
+            src="/logo-ms.svg"
             alt="Mars Shop Logo"
             className="w-12 h-12 drop-shadow-lg"
           />
