@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Set the RewriteBase if you are using Apache aliases or when mod_rewrite is not working properly
+    # RewriteBase /
+
+    # Redirect to URI without front controller
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# Pass Authorization header to PHP
+SetEnvIf Authorization .+ HTTP_AUTHORIZATION=$0
+
+# Deny .htaccess file access
+<Files .htaccess>
+    Order allow,deny
+    Deny from all
+</Files>
